@@ -72,6 +72,7 @@ class SCLiveticker {
 		self::update_options();
 
 		// Add filter for REST API queries (TODO: conditionally).
+		add_filter( 'rest_api_init', array( 'SCLiveticker\\Api', 'init' ) );
 		add_filter( 'rest_scliveticker_tick_query', array( 'SCLiveticker\\Api', 'tick_query_filter' ), 10, 2 );
 
 		// Skip on AJAX if not enabled.

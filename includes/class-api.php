@@ -21,6 +21,28 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Api {
 	/**
+	 * Initialize custom fields for REST API responses.
+	 *
+	 * @return void
+	 */
+	public static function init() {
+		// Add rendered modification date to WP_Post object.
+		register_rest_field(
+			'scliveticker_tick',
+			'modified_rendered',
+			array(
+				'get_callback' => function ( $post ) {
+					return get_the_modified_date( 'd.m.Y H:i', $post );
+				},
+				'schema'       => array(
+					'description' => __( 'Rendered modification date and time.', 'stklcode-liveticker' ),
+					'type'        => 'string',
+				),
+			)
+		);
+	}
+
+	/**
 	 * Filter tick queries by ticker slug and date.
 	 *
 	 * @param array            $args    Query vars.
@@ -32,7 +54,7 @@ class Api {
 		// Extract arguments.
 		$ticker_slug = $request->get_param( 'ticker' );
 		$limit       = intval( $request->get_param( 'limit' ) );
-		$last_poll   = intval( $request->get_param( 'last' ) );
+		$last_poll   = $request->get_param( 'last' );
 
 		if ( ! empty( $ticker_slug ) ) {
 			$args['tax_query'][] = array(
@@ -42,8 +64,10 @@ class Api {
 			);
 		}
 
-		if ( ! empty( $limit ) ) {
+		if ( ! empty( $limit ) && $limit > 0 ) {
 			$args['posts_per_page'] = $limit;
+		} else {
+			$args['paged'] = false;
 		}
 
 		if ( $last_poll > 0 ) {
@@ -51,7 +75,7 @@ class Api {
 				',',
 				gmdate(
 					'Y,m,d,H,i,s',
-					$last_poll
+					rest_parse_date( $last_poll )
 				)
 			);
 
