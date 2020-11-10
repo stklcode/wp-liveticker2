@@ -26,7 +26,7 @@ class SCLiveticker {
 	 *
 	 * @var string OPTIONS
 	 */
-	const VERSION = '1.1.0';
+	const VERSION = '1.2.0';
 
 	/**
 	 * Options tag.
@@ -71,7 +71,10 @@ class SCLiveticker {
 		// Load plugin options.
 		self::update_options();
 
-		// Skip on AJAX if not enabled disabled.
+		// Add filter for REST API queries (TODO: conditionally).
+		add_filter( 'rest_scliveticker_tick_query', array( 'SCLiveticker\\Api', 'tick_query_filter' ), 10, 2 );
+
+		// Skip on AJAX if not enabled.
 		if ( ( ! isset( self::$options['enable_ajax'] ) || 1 !== self::$options['enable_ajax'] ) && ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
 			return;
 		}
@@ -300,7 +303,7 @@ class SCLiveticker {
 		// Extract update requests.
 		if ( isset( $_POST['update'] ) && is_array( $_POST['update'] ) ) {  // Input var okay.
 			$res = array();
-			// @codingStandardsIgnoreLine Sanitization of arrayhandled on field level.
+			// @codingStandardsIgnoreLine Sanitization of array handled on field level.
 			foreach ( wp_unslash( $_POST['update'] ) as $update_req ) {
 				if ( is_array( $update_req ) && ( isset( $update_req['s'] ) || isset( $update_req['w'] ) ) ) {
 					if ( isset( $update_req['s'] ) ) {
@@ -310,7 +313,7 @@ class SCLiveticker {
 						$is_widget = true;
 						$slug      = sanitize_text_field( $update_req['w'] );
 					} else {
-						// Should never occur, but for completenes' sake...
+						// Should never occur, but for completeness' sake...
 						break;
 					}
 

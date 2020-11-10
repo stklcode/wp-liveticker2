@@ -9,7 +9,7 @@
  * @wordpress-plugin
  * Plugin Name: Liveticker (by stklcode)
  * Description: A simple Liveticker for WordPress.
- * Version:     1.1.0
+ * Version:     1.2.0-alpha
  * Author:      Stefan Kalscheuer
  * Author URI:  https://www.stklcode.de
  * Text Domain: stklcode-liveticker
@@ -72,6 +72,7 @@ function scliveticker_autoload( $class ) {
 	$plugin_classes = array(
 		'SCLiveticker\\SCLiveticker',
 		'SCLiveticker\\Admin',
+		'SCLiveticker\\Api',
 		'SCLiveticker\\System',
 		'SCLiveticker\\Widget',
 	);
