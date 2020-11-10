@@ -205,16 +205,6 @@ class SCLiveticker {
 			} else {
 				$show_feed = 1 === self::$options['show_feed'];
 			}
-
-			$output = '<div class="wp-block-scliveticker-ticker';
-			if ( 1 === self::$options['enable_ajax'] ) {
-				$output .= ' sclt-ajax" '
-							. 'data-sclt-ticker="' . $ticker . '" '
-							. 'data-sclt-limit="' . $limit . '" '
-							. 'data-sclt-last="' . time();
-			}
-			$output .= '"><ul>';
-
 			$args = array(
 				'post_type'      => 'scliveticker_tick',
 				'posts_per_page' => $limit,
@@ -229,12 +219,24 @@ class SCLiveticker {
 
 			$wp_query = new WP_Query( $args );
 
+			$ticks = '';
+			$last  = null;
 			while ( $wp_query->have_posts() ) {
 				$wp_query->the_post();
-				$output .= self::tick_html( get_the_time( 'd.m.Y H:i' ), get_the_title(), get_the_content() );
+				$ticks .= self::tick_html( get_the_time( 'd.m.Y H:i' ), get_the_title(), get_the_content() );
+				if ( is_null( $last ) ) {
+					$last = get_post_modified_time( 'Y-m-d\TH:i:s', true );
+				}
 			}
 
-			$output .= '</ul></div>';
+			$output = '<div class="wp-block-scliveticker-ticker';
+			if ( 1 === self::$options['enable_ajax'] ) {
+				$output .= ' sclt-ajax" '
+							. 'data-sclt-ticker="' . $ticker . '" '
+							. 'data-sclt-limit="' . $limit . '" '
+							. 'data-sclt-last="' . $last;
+			}
+			$output .= '"><ul>' . $ticks . '</ul></div>';
 
 			// Show RSS feed link, if configured.
 			if ( $show_feed ) {
@@ -262,7 +264,7 @@ class SCLiveticker {
 		if ( self::$shortcode_present || self::$widget_present || self::block_present() ) {
 			wp_enqueue_script(
 				'scliveticker-js',
-				SCLIVETICKER_BASE . 'scripts/liveticker.min.js',
+				SCLIVETICKER_BASE . 'scripts/liveticker.js',
 				array(),
 				self::VERSION,
 				true
@@ -271,10 +273,11 @@ class SCLiveticker {
 			// Add endpoint to script.
 			wp_localize_script(
 				'scliveticker-js',
-				'sclivetickerAjax',
+				'scliveticker',
 				array(
 					'ajax_url'      => admin_url( 'admin-ajax.php' ),
 					'nonce'         => wp_create_nonce( 'scliveticker_update-ticks' ),
+					'api'           => rest_url(),
 					'poll_interval' => self::$options['poll_interval'] * 1000,
 				)
 			);
@@ -435,9 +438,9 @@ class SCLiveticker {
 	 */
 	private static function tick_html( $time, $title, $content, $is_widget = false ) {
 		return '<li class="sclt-tick">'
-			. '<p><span class="sclt-tick_time">' . esc_html( $time ) . '</span>'
-			. '<span class="sclt-tick-title">' . esc_html( $title ) . '</span></p>'
-			. '<p class="sclt-tick-content">' . $content . '</p></li>';
+			. '<span class="sclt-tick-time">' . esc_html( $time ) . '</span>'
+			. '<span class="sclt-tick-title">' . esc_html( $title ) . '</span>'
+			. '<div class="sclt-tick-content">' . $content . '</div></li>';
 	}
 
 	/**
