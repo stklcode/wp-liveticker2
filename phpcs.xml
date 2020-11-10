@@ -12,7 +12,7 @@
 	<file>views</file>
 
 	<!-- Compliance with WordPress Coding Standard -->
-	<config name="minimum_supported_wp_version" value="4.0"/>
+	<config name="minimum_supported_wp_version" value="4.7"/>
 	<rule ref="WordPress">
 		<exclude name="WordPress.DB.SlowDBQuery.slow_db_query_tax_query"/>
 	</rule>
@@ -26,5 +26,5 @@
 
 	<!-- PHP compatibility level -->
 	<config name="testVersion" value="5.6-"/>
-	<rule ref="PHPCompatibility"/>
+	<rule ref="PHPCompatibilityWP"/>
 </ruleset>
