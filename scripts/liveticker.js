@@ -99,6 +99,7 @@
 			lastPoll: last,
 			ticks: list,
 			isWidget: widget,
+			updating: false,
 		};
 	};
 
@@ -111,8 +112,16 @@
 		// Iterate over available tickers.
 		ticker.forEach(
 			function( t ) {
-				var xhr = new XMLHttpRequest();
-				var query = '?ticker=' + encodeURI( t.ticker ) +
+				var xhr, query;
+
+				if ( t.updating ) {
+					// Do not update twice.
+					return;
+				}
+
+				t.updating = true;
+				xhr = new XMLHttpRequest();
+				query = '?ticker=' + encodeURI( t.ticker ) +
 					'&limit=' + encodeURI( t.limit ) +
 					'&last=' + encodeURI( t.lastPoll );
 				xhr.open( 'GET', apiURL + query, true );
@@ -130,7 +139,7 @@
 									}
 								);
 							}
-							setTimeout( update, pollInterval );		// Re-trigger update.
+							t.updating = false;
 						} catch ( e ) {
 							// eslint-disable-next-line no-console
 							console.warn( 'Liveticker AJAX update failed, stopping automatic updates.' );
@@ -140,6 +149,9 @@
 				xhr.send();
 			}
 		);
+
+		// Re-trigger update.
+		setTimeout( update, pollInterval );
 	};
 
 	/**
@@ -156,6 +168,7 @@
 		var title = document.createElement( 'span' );
 		var content = document.createElement( 'div' );
 		var cls = t.isWidget ? 'sclt-widget' : 'sclt-tick';
+		var old;
 
 		li.id = 'sclt-' + t.id + '-' + u.id;
 		li.classList.add( cls );
@@ -169,8 +182,14 @@
 		li.appendChild( title );
 		li.appendChild( content );
 
-		// Prepend new tick to container.
-		t.ticks.prepend( li );
+		old = document.getElementById( 'sclt-' + t.id + '-' + u.id );
+		if ( old ) {
+			// Replace entry, if it already exists (i.e. has been updated).
+			t.ticks.replaceChild( li, old );
+		} else {
+			// Prepend new tick to container.
+			t.ticks.insertBefore( li, t.ticks.firstChild );
+		}
 
 		// Update last poll time.
 		t.lastPoll = u.date_gmt;

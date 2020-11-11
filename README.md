@@ -88,6 +88,7 @@ caching time of 12 hours obviously makes no sense.
 
 * Requires WordPress 4.7 or above
 * Migrated AJAX to REST API
+* Resolved Javascript compatibility issues with IE11
 
 ### 1.1.0 - 2020-05-02
 
