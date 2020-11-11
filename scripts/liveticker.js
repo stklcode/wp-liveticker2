@@ -15,6 +15,7 @@
 	 */
 	var init = function() {
 		var updateNow = false;
+		var c = 0;
 
 		// Opt out if AJAX pobject not present.
 		if ( 'undefined' === typeof scliveticker ) {
@@ -29,11 +30,11 @@
 		ticker = [].map.call(
 			document.querySelectorAll( 'div.wp-block-scliveticker-ticker.sclt-ajax' ),
 			function( elem ) {
-				elem = parseElement( elem, false );
-				if ( '0' === elem.lastPoll ) {
+				var o = parseElement( elem, false, ++c );
+				if ( '0' === o.lastPoll ) {
 					updateNow = true;
 				}
-				return elem;
+				return o;
 			}
 		);
 
@@ -42,11 +43,11 @@
 			[].map.call(
 				document.querySelectorAll( 'div.wp-widget-scliveticker-ticker.sclt-ajax' ),
 				function( elem ) {
-					elem = parseElement( elem, true );
-					if ( 0 === elem.lastPoll ) {
+					var o = parseElement( elem, true, ++c );
+					if ( 0 === o.lastPoll ) {
 						updateNow = true;
 					}
-					return elem;
+					return o;
 				}
 			)
 		);
@@ -66,18 +67,33 @@
 	 *
 	 * @param {HTMLElement} elem   The element.
 	 * @param {boolean}     widget Is the element a widget?
+	 * @param {number}      n      Number of the container.
 	 * @return {{ticker: string, lastPoll: number, ticks: any, limit: string, isWidget: *}} Ticker descriptor object.
 	 */
-	var parseElement = function( elem, widget ) {
+	var parseElement = function( elem, widget, n ) {
 		var list = elem.querySelector( 'ul' );
 		var last = elem.getAttribute( 'data-sclt-last' );
+
+		elem.id = 'sclt-' + n;
 
 		if ( ! list ) {
 			list = document.createElement( 'ul' );
 			elem.appendChild( list );
+		} else {
+			[].forEach.call(
+				elem.querySelectorAll( 'li.sclt-tick' ),
+				function( li ) {
+					var id = li.getAttribute( 'data-sclt-tick-id' );
+					if ( id ) {
+						li.id = 'sclt-' + n + '-' + id;
+						li.removeAttribute( 'data-sclt-tick-id' );
+					}
+				}
+			);
 		}
 
 		return {
+			id: n,
 			ticker: elem.getAttribute( 'data-sclt-ticker' ),
 			limit: elem.getAttribute( 'data-sclt-limit' ),
 			lastPoll: last,
@@ -141,6 +157,7 @@
 		var content = document.createElement( 'div' );
 		var cls = t.isWidget ? 'sclt-widget' : 'sclt-tick';
 
+		li.id = 'sclt-' + t.id + '-' + u.id;
 		li.classList.add( cls );
 		time.classList.add( cls + '-time' );
 		time.innerText = u.modified_rendered;

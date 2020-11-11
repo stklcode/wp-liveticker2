@@ -223,7 +223,7 @@ class SCLiveticker {
 			$last  = null;
 			while ( $wp_query->have_posts() ) {
 				$wp_query->the_post();
-				$ticks .= self::tick_html( get_the_time( 'd.m.Y H:i' ), get_the_title(), get_the_content() );
+				$ticks .= self::tick_html( get_the_time( 'd.m.Y H:i' ), get_the_title(), get_the_content(), get_the_ID() );
 				if ( is_null( $last ) ) {
 					$last = get_post_modified_time( 'Y-m-d\TH:i:s', true );
 				}
@@ -264,7 +264,7 @@ class SCLiveticker {
 		if ( self::$shortcode_present || self::$widget_present || self::block_present() ) {
 			wp_enqueue_script(
 				'scliveticker-js',
-				SCLIVETICKER_BASE . 'scripts/liveticker.js',
+				SCLIVETICKER_BASE . 'scripts/liveticker.min.js',
 				array(),
 				self::VERSION,
 				true
@@ -360,9 +360,9 @@ class SCLiveticker {
 					while ( $query->have_posts() ) {
 						$query->the_post();
 						if ( $is_widget ) {
-							$out .= self::tick_html_widget( get_the_time( 'd.m.Y H:i' ), get_the_title(), false );
+							$out .= self::tick_html_widget( get_the_time( 'd.m.Y H:i' ), get_the_title(), false, get_the_ID() );
 						} else {
-							$out .= self::tick_html( get_the_time( 'd.m.Y H:i' ), get_the_title(), get_the_content(), $is_widget );
+							$out .= self::tick_html( get_the_time( 'd.m.Y H:i' ), get_the_title(), get_the_content(), get_the_ID() );
 						}
 					}
 
@@ -429,15 +429,15 @@ class SCLiveticker {
 	/**
 	 * Generate HTML code for a tick element.
 	 *
-	 * @param string  $time      Tick time (readable).
-	 * @param string  $title     Tick title.
-	 * @param string  $content   Tick content.
-	 * @param boolean $is_widget Is the code for Widget.
+	 * @param string  $time    Tick time (readable).
+	 * @param string  $title   Tick title.
+	 * @param string  $content Tick content.
+	 * @param integer $id      Tick ID.
 	 *
 	 * @return string HTML code of tick.
 	 */
-	private static function tick_html( $time, $title, $content, $is_widget = false ) {
-		return '<li class="sclt-tick">'
+	private static function tick_html( $time, $title, $content, $id ) {
+		return '<li class="sclt-tick" data-sclt-tick-id="' . esc_attr( $id ) . '">'
 			. '<span class="sclt-tick-time">' . esc_html( $time ) . '</span>'
 			. '<span class="sclt-tick-title">' . esc_html( $title ) . '</span>'
 			. '<div class="sclt-tick-content">' . $content . '</div></li>';
@@ -449,13 +449,17 @@ class SCLiveticker {
 	 * @param string  $time      Tick time (readable).
 	 * @param string  $title     Tick title.
 	 * @param boolean $highlight Highlight element.
+	 * @param integer $id        Tick ID.
 	 *
 	 * @return string HTML code of widget tick.
 	 */
-	public static function tick_html_widget( $time, $title, $highlight ) {
+	public static function tick_html_widget( $time, $title, $highlight, $id = 0 ) {
 		$out = '<li';
 		if ( $highlight ) {
 			$out .= ' class="sclt-widget-new"';
+		}
+		if ( $id > 0 ) {
+			$out .= ' data-sclt-tick-id="' . esc_attr( $id ) . '"';
 		}
 		return $out . '>'
 			. '<span class="sclt-widget-time">' . esc_html( $time ) . '</span>'

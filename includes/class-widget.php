@@ -101,7 +101,8 @@ class Widget extends WP_Widget {
 			echo SCLiveticker::tick_html_widget(
 				esc_html( get_the_time( 'd.m.Y - H:i' ) ),
 				get_the_title(),
-				( '1' === $highlight && get_the_time( 'U' ) > ( time() - $highlight_time ) )
+				( '1' === $highlight && get_the_time( 'U' ) > ( time() - $highlight_time ) ),
+				get_the_ID()
 			);
 		}
 
